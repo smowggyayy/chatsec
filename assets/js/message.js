@@ -1,112 +1,89 @@
 import { handshake } from "./handshake";
 import { encryptMessage, decryptMessage } from "./encrypt";
 import { showToast } from "./toast";
-
+const USERNAME_KEY = "username";
+const SELF_COLOR = "rgb(138, 255, 156)";
+const OTHER_COLOR = "rgb(255, 128, 197)";
+// --- module state ---
 let secretKey;
 let currentChannel;
 let currentUsername;
-let initialize = false;
-
-async function sendAndReceiveMessages(
-	chatInput,
-	username,
-	channel,
-	messagesContainer,
-) {
-	async function handleKeyPress(event) {
-		if (!event.shiftKey && event.key === "Enter") {
-			event.preventDefault();
-			const msg = chatInput.value.trim();
-			if (msg.length < 1) {
-				return;
-			}
-			try {
-				const { encryptedMessage, iv } = await encryptMessage(secretKey, msg);
-				channel.push("new_msg", {
-					username: username,
-					body: encryptedMessage,
-					iv: iv,
-				});
-				chatInput.value = "";
-				chatInput.style.height = "40px";
-			} catch (error) {
-				showToast("Sending message failed!", "danger");
-			}
-		}
+let initialized = false;
+// --- dom helpers ---
+function buildMessageEl(payload, username) {
+	const isSelf = payload.username === username;
+	const usernameEl = document.createElement("span");
+	usernameEl.className = "username";
+	usernameEl.innerText = payload.username;
+	usernameEl.style.color = isSelf ? SELF_COLOR : OTHER_COLOR;
+	const messageEl = document.createElement("p");
+	messageEl.className = "max-w-full break-words";
+	const container = document.createElement("div");
+	container.className = `flex flex-col gap-1 ${isSelf ? "items-end" : "items-start"}`;
+	container.appendChild(usernameEl);
+	container.appendChild(messageEl);
+	return { container, messageEl };
+}
+// --- event handlers ---
+async function handleKeyDown(event) {
+	if (event.shiftKey || event.key !== "Enter") return;
+	event.preventDefault();
+	const chatInput = event.currentTarget;
+	const msg = chatInput.value.trim();
+	if (!msg) return;
+	try {
+		const { encryptedMessage, iv } = await encryptMessage(secretKey, msg);
+		currentChannel.push("new_msg", {
+			username: currentUsername,
+			body: encryptedMessage,
+			iv,
+		});
+		chatInput.value = "";
+		chatInput.style.height = "40px";
+	} catch (_) {
+		showToast("Sending message failed!", "danger");
 	}
-
-	async function handleNewMsg(payload) {
-		try {
-			if (payload.body) {
-				const usernameItem = document.createElement("span");
-				const messageItem = document.createElement("p");
-				const decryptedMessage = await decryptMessage(
-					secretKey,
-					payload.body,
-					payload.iv,
-				);
-
-				usernameItem.className = "username";
-				usernameItem.innerText = payload.username;
-				messageItem.innerText = decryptedMessage;
-				messageItem.className = "max-w-full break-words";
-
-				const divContainer = document.createElement("div");
-				divContainer.className = "flex flex-col gap-1";
-				divContainer.appendChild(usernameItem);
-				divContainer.appendChild(messageItem);
-
-				if (payload.username === username) {
-					divContainer.classList.add("items-end");
-					usernameItem.style.color = "rgb(138,255,156)";
-				} else {
-					divContainer.classList.add("items-start");
-					usernameItem.style.color = "rgb(255, 128, 197)";
-				}
-
-				messagesContainer.appendChild(divContainer);
-			} else {
-				showToast("Invalid payload!", "danger");
-			}
-		} catch (error) {
-			showToast("Something went wrong:", "danger");
-		}
+}
+async function handleNewMsg(payload, username, messagesContainer) {
+	if (!payload.body) {
+		console.warn("Received message with no body", payload);
+		return;
 	}
-	// Check if we need to perform a handshake again
-	if (
-		!secretKey ||
-		currentChannel !== channel ||
-		currentUsername !== username
-	) {
+	try {
+		const decrypted = await decryptMessage(secretKey, payload.body, payload.iv);
+		const { container, messageEl } = buildMessageEl(payload, username);
+		messageEl.innerText = decrypted;
+		messagesContainer.appendChild(container);
+	} catch (_) {
+		showToast("Failed to decrypt message.", "danger");
+	}
+}
+function handleRoomDeleted() {
+	sessionStorage.removeItem(USERNAME_KEY);
+	window.location.href = "/";
+}
+// --- public api ---
+async function sendAndReceiveMessages(chatInput, username, channel, messagesContainer) {
+	const channelOrUserChanged = currentChannel !== channel || currentUsername !== username;
+	if (!secretKey || channelOrUserChanged) {
 		secretKey = await handshake(null, channel, username);
 		currentChannel = channel;
 		currentUsername = username;
+		initialized = false;
 	}
-
-	if (!initialize) {
-		chatInput.addEventListener("keypress", handleKeyPress);
-		channel.on("new_msg", handleNewMsg);
+	if (!initialized) {
+		chatInput.addEventListener("keydown", handleKeyDown);
+		channel.on("new_msg", (payload) => handleNewMsg(payload, username, messagesContainer));
 		channel.on("room_deleted", handleRoomDeleted);
-
-		initialize = true;
-	}
-
-	function handleRoomDeleted() {
-		sessionStorage.clear();
-		window.location = "/";
+		initialized = true;
 	}
 }
-
 function simulateEnterKeyPress(element) {
-	const enterEvent = new KeyboardEvent("keypress", {
+	element.dispatchEvent(new KeyboardEvent("keydown", {
 		key: "Enter",
 		code: "Enter",
-		keyCode: 13,
-		which: 13,
 		bubbles: true,
 		cancelable: true,
-	});
-	element.dispatchEvent(enterEvent);
+	}));
 }
-
 export { sendAndReceiveMessages, simulateEnterKeyPress };

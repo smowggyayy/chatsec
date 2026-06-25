@@ -1,113 +1,95 @@
 import {
-	importPublicKey,
-	deriveSecretKey,
-	generateKeyPair,
-	exportPublicKey,
+  importPublicKey,
+  deriveSecretKey,
+  generateKeyPair,
+  exportPublicKey,
 } from "./encrypt";
 import { showToast } from "./toast";
-
-async function generateAndAddToMap(username, pubkeyMap) {
-	try {
-		keyPair = await generateKeyPair();
-		const exportedPublicKey = await exportPublicKey(keyPair.publicKey);
-		pubkeyMap.set(exportedPublicKey, username);
-		return {
-			keyPair,
-			exportedPublicKey,
-		};
-	} catch (e) {
-		showToast("Something went wrong! try again later.", "danger");
-	}
-}
-
-async function getAndConvertPublicKey(
-	publicKey,
-	username,
-	pubkeyMap,
-	privateKey,
-) {
-	pubkeyMap.set(publicKey, username);
-	const convertedPublicKey = await importPublicKey(publicKey);
-	return await deriveSecretKey(privateKey, convertedPublicKey);
-}
-
-function syn(exportedPublicKey, username, channel) {
-	try {
-		channel.push("publickey", {
-			publickey: exportedPublicKey,
-			username: username,
-		});
-	} catch (e) {
-		showToast("Something went wrong, try again later.", "danger");
-	}
-}
-
-async function handshake(value, channel, username) {
-	const uuid = window.location.href.split("/").slice(-1)[0];
-	let secretKey = value ?? sessionStorage.getItem(uuid);
-	if (!secretKey) {
-		let acknowledged = false;
-		const pubkeyMap = new Map();
-		const { keyPair, exportedPublicKey } = await generateAndAddToMap(
-			username,
-			pubkeyMap,
-		);
-
-		channel.on("publickey", async (payload) => {
-			const pubkey = payload.publickey;
-			const user = payload.username;
-			if (user !== username) {
-				if (!pubkeyMap.has(pubkey)) {
-					secretKey = await getAndConvertPublicKey(
-						pubkey,
-						user,
-						pubkeyMap,
-						keyPair.privateKey,
-					);
-					syn(exportedPublicKey, username, channel);
-					acknowledged = true;
-				}
-			}
-		});
-
-		// Initial send of the public key
-		syn(exportedPublicKey, username, channel);
-		while (!acknowledged) {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-		}
-
-		showToast("Handshake completed!", "success");
-
-		const secretKeyBase64 = await convertKeyToBase64(secretKey);
-		sessionStorage.setItem(uuid, secretKeyBase64);
-		return secretKey;
-	}
-	return convertBase64ToKey(secretKey);
-}
-
+const HANDSHAKE_TIMEOUT_MS = 30_000;
+// --- base64 key serialisation ---
 async function convertKeyToBase64(key) {
-	const exportedKey = await crypto.subtle.exportKey("raw", key);
-	const base64Key = btoa(String.fromCharCode(...new Uint8Array(exportedKey)));
-	return base64Key;
+  const exported = await crypto.subtle.exportKey("raw", key);
+  const bytes = new Uint8Array(exported);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
 }
-
-async function convertBase64ToKey(base64Key) {
-	const binaryString = atob(base64Key);
-	const binaryLen = binaryString.length;
-	const bytes = new Uint8Array(binaryLen);
-	for (let i = 0; i < binaryLen; i++) {
-		bytes[i] = binaryString.charCodeAt(i);
-	}
-	const key = await crypto.subtle.importKey(
-		"raw",
-		bytes.buffer,
-		{
-			name: "AES-GCM",
-		},
-		true,
-		["encrypt", "decrypt"],
-	);
-	return key;
+async function convertBase64ToKey(base64) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array([...binary].map((c) => c.charCodeAt(0)));
+  return crypto.subtle.importKey(
+    "raw",
+    bytes.buffer,
+    { name: "AES-GCM" },
+    true,
+    ["encrypt", "decrypt"],
+  );
 }
-
+// --- handshake helpers ---
+async function generateAndAddToMap(username, pubkeyMap) {
+  const keyPair = await generateKeyPair();
+  const exportedPublicKey = await exportPublicKey(keyPair.publicKey);
+  pubkeyMap.set(exportedPublicKey, username);
+  return { keyPair, exportedPublicKey };
+}
+async function getAndConvertPublicKey(publicKey, username, pubkeyMap, privateKey) {
+  pubkeyMap.set(publicKey, username);
+  const converted = await importPublicKey(publicKey);
+  return deriveSecretKey(privateKey, converted);
+}
+function syn(exportedPublicKey, username, channel) {
+  try {
+    channel.push("publickey", { publickey: exportedPublicKey, username });
+  } catch (_) {
+    showToast("Something went wrong, try again later.", "danger");
+  }
+}
+function awaitAcknowledgement() {
+  let resolve;
+  let timeoutId;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    timeoutId = setTimeout(
+      () => rej(new Error("Handshake timed out.")),
+      HANDSHAKE_TIMEOUT_MS,
+    );
+  });
+  function acknowledge() {
+    clearTimeout(timeoutId);
+    resolve();
+  }
+  return { promise, acknowledge };
+}
+// --- public api ---
+async function handshake(value, channel, username) {
+  const uuid = window.location.href.split("/").at(-1);
+  const cached = value ?? sessionStorage.getItem(uuid);
+  if (cached) return convertBase64ToKey(cached);
+  const pubkeyMap = new Map();
+  const { keyPair, exportedPublicKey } = await generateAndAddToMap(username, pubkeyMap);
+  const { promise, acknowledge } = awaitAcknowledgement();
+  let secretKey;
+  channel.on("publickey", async (payload) => {
+    const { publickey: pubkey, username: user } = payload;
+    if (user === username || pubkeyMap.has(pubkey)) return;
+    try {
+      secretKey = await getAndConvertPublicKey(pubkey, user, pubkeyMap, keyPair.privateKey);
+      syn(exportedPublicKey, username, channel);
+      acknowledge();
+    } catch (_) {
+      showToast("Handshake failed — could not derive secret.", "danger");
+    }
+  });
+  syn(exportedPublicKey, username, channel);
+  try {
+    await promise;
+  } catch (_) {
+    showToast("Handshake timed out. Please refresh.", "danger");
+    throw
+  }
+  showToast("Handshake completed!", "success");
+  const secretKeyBase64 = await convertKeyToBase64(secretKey);
+  sessionStorage.setItem(uuid, secretKeyBase64);
+  return secretKey;
+}
 export { handshake };

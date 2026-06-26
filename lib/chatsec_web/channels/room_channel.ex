@@ -5,12 +5,13 @@ defmodule ChatsecWeb.RoomChannel do
 
   def join("room:" <> room_id, %{"username" => username}, socket)
       when is_binary(username) do
-    if Presence.list(socket) |> map_size < 2 do
-      send(self(), {:after_join, username})
-      ChannelState.join(room_id, username)
-      {:ok, assign(socket, user_id: username, room_id: room_id)}
-    else
-      {:error, %{reason: "room_full"}}
+    case ChannelState.try_join(room_id, username) do
+      :ok ->
+        send(self(), {:after_join, username})
+        {:ok, assign(socket, user_id: username, room_id: room_id)}
+
+      {:error, :room_full} ->
+        {:error, %{reason: "room_full"}}
     end
   end
 
@@ -42,17 +43,13 @@ defmodule ChatsecWeb.RoomChannel do
   end
 
   def terminate(_, socket) do
-    case Map.fetch(socket.assigns, :user_id) do
-      {:ok, user_id} ->
-        Presence.untrack(socket, user_id)
-
-      :error ->
-        :ok
-    end
-
     case socket.assigns do
-      %{user_id: username, room_id: room_id} -> ChannelState.leave(room_id, username)
-      _ -> :ok
+      %{user_id: username, room_id: room_id} ->
+        Presence.untrack(socket, username)
+        ChannelState.leave(room_id, username)
+
+      _ ->
+        :ok
     end
 
     :ok

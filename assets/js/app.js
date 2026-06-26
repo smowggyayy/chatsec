@@ -6,7 +6,7 @@ import { usernameForm } from "./username.js";
 import { redirectUserToChat, checkAndConnect, showDeleteChatModal } from "./chat.js";
 import { copyChatUrl } from "./link.js";
 import { handshake } from "./handshake.js";
-import { sendAndReceiveMessages, simulateEnterKeyPress } from "./message.js";
+import { sendAndReceiveMessages, sendMessage } from "./message.js";
 import { donateModal } from "./donate.js";
 function initLiveSocket() {
     const csrfToken = document
@@ -29,7 +29,7 @@ function initProgressBar() {
 function registerGlobals(liveSocket) {
     const api = {
         liveSocket,
-        simulateEnterKeyPress,
+        sendMessage,
         sendAndReceiveMessages,
         handshake,
         copyChatUrl,

@@ -43,7 +43,7 @@ defmodule ChatsecWeb do
         layouts: [html: ChatsecWeb.Layouts]
 
       import Plug.Conn
-      import ChatsecWeb.Gettext
+      use Gettext, backend: ChatsecWeb.Gettext
 
       unquote(verified_routes())
     end
@@ -85,7 +85,7 @@ defmodule ChatsecWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import ChatsecWeb.CoreComponents
-      import ChatsecWeb.Gettext
+      use Gettext, backend: ChatsecWeb.Gettext
 
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS

@@ -21,18 +21,16 @@ def setup():
         context_bob = browser.new_context(ignore_https_errors=True)
         page_bob = context_bob.new_page()
 
-        yield {'page_alice': page_alice, 'page_bob': page_bob} 
+        yield {'page_alice': page_alice, 'page_bob': page_bob}
         context_alice.close()
         context_bob.close()
 
 def test_e2ee_conversation(setup):
     alice = setup['page_alice']
-    alice.click("text='Set username'")
+    alice.click("text='Start a chat'")
+    alice.wait_for_url(re.compile(r"/chat/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
     alice.get_by_placeholder("Username").fill("Alice")
     alice.click("text='Submit'")
-    alice.click("text='Start a chat'")
-    # Wait for the URL to match the regex pattern for UUID4
-    alice.wait_for_url(re.compile(r"/chat/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
     chatroom = alice.url
     time.sleep(1)
 
@@ -52,7 +50,7 @@ def test_e2ee_conversation(setup):
     bob.click("text='Delete room'")
     bob.locator("text='Confirm deletion?'").wait_for(state="visible") # Wait for the delete modal to show up
     bob.click("text='Delete chat'")
-    
+
     # Wait for Alice to be redirected to the home page
     alice.wait_for_url(f"https://{IP}:{PORT}/")
 

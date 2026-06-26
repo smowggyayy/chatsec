@@ -1,6 +1,6 @@
 defmodule ChatsecWeb.PageController do
-  alias ChatsecWeb.ChannelState
   use ChatsecWeb, :controller
+  alias ChatsecWeb.ChannelState
 
   def home(conn, _params) do
     render(conn, :home, layout: false)

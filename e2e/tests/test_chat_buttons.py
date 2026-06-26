@@ -17,12 +17,10 @@ def setup():
         context = browser.new_context(ignore_https_errors=True)
         page = context.new_page()
         page.goto(f"https://{IP}:{PORT}/")
-        page.click("text='Set username'")
+        page.click("text='Start a chat'")
+        page.wait_for_url(re.compile(r"/chat/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
         page.get_by_placeholder("Username").fill("Playwright")
         page.click("text='Submit'")
-        page.click("text='Start a chat'")
-        # Wait for the URL to match the regex pattern for UUID4
-        page.wait_for_url(re.compile(r"/chat/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
         yield page
         context.close()
         browser.close()
@@ -41,4 +39,3 @@ def test_username_shows_as_online(setup):
     parent = page.locator("div:has-text('Online')")
     # Check if the username appears as online
     assert parent.locator("text='Playwright'").is_visible(), "The Username did not appear as online."
-

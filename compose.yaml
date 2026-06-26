@@ -6,15 +6,22 @@ services:
       context: .
     env_file:
       - .env
-    environment: 
-      PHX_SERVER: yes
+    environment:
+      PHX_SERVER: "true"
       PHX_HOST: "chatsec.app"
     labels:
-      - traefik.http.services.chatsec.loadbalancer.server.port=4000
-      - traefik.enable=true
-      - traefik.http.routers.chatsec.tls=true
+      - "traefik.enable=true"
+      - "traefik.http.services.chatsec.loadbalancer.server.port=4000"
+      - "traefik.http.routers.chatsec.rule=Host(`chatsec.app`)"
+      - "traefik.http.routers.chatsec.entrypoints=websecure"
+      - "traefik.http.routers.chatsec.tls=true"
+      # Rate limiting middleware
+      - "traefik.http.middlewares.chatsec-ratelimit.ratelimit.average=100"
+      - "traefik.http.middlewares.chatsec-ratelimit.ratelimit.burst=50"
+      - "traefik.http.routers.chatsec.middlewares=chatsec-ratelimit"
     depends_on:
       - reverse-proxy
+
   reverse-proxy:
     image: traefik:v3.6
     restart: unless-stopped
@@ -22,18 +29,12 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
-      # redirect to secure version
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entryPoint.permanent=true"
       - "--entrypoints.websecure.address=:443"
-      - "--providers.docker.defaultRule=Host(`chatsec.app`)"
     ports:
-      # The HTTP port
       - "80:80"
       - "443:443"
     volumes:
-      # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      - "traefik.http.routers.chatsec.rule=Host(`chatsec.docker.localhost`)"
-      - "traefik.http.middlewares.test-ratelimit.ratelimit.average=3"

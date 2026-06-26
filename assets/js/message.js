@@ -13,13 +13,18 @@ let initialized = false;
 function buildMessageEl(payload, username) {
 	const isSelf = payload.username === username;
 	const usernameEl = document.createElement("span");
-	usernameEl.className = "username";
-	usernameEl.innerText = payload.username;
+	usernameEl.className = `text-xs font-semibold mb-1.5 ${isSelf ? "text-right" : "text-left"}`;
 	usernameEl.style.color = isSelf ? SELF_COLOR : OTHER_COLOR;
+	usernameEl.innerText = payload.username;
 	const messageEl = document.createElement("p");
-	messageEl.className = "max-w-full break-words";
+	messageEl.className = [
+		"text-sm leading-relaxed break-words whitespace-pre-wrap px-3 py-2 rounded-2xl max-w-[75vw] md:max-w-sm shadow",
+		isSelf
+			? "bg-emerald-700 text-white rounded-br-sm"
+			: "bg-gray-700 text-white rounded-bl-sm",
+	].join(" ");
 	const container = document.createElement("div");
-	container.className = `flex flex-col gap-1 ${isSelf ? "items-end" : "items-start"}`;
+	container.className = `flex flex-col ${isSelf ? "items-end" : "items-start"}`;
 	container.appendChild(usernameEl);
 	container.appendChild(messageEl);
 	return { container, messageEl };
@@ -56,6 +61,7 @@ async function handleNewMsg(payload, username, messagesContainer) {
 		const { container, messageEl } = buildMessageEl(payload, username);
 		messageEl.innerText = decrypted;
 		messagesContainer.appendChild(container);
+		container.scrollIntoView({ behavior: "smooth", block: "end" });
 	} catch (_) {
 		showToast("Failed to decrypt message.", "danger");
 	}

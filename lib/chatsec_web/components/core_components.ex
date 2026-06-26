@@ -17,7 +17,7 @@ defmodule ChatsecWeb.CoreComponents do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
-  import ChatsecWeb.Gettext
+  use Gettext, backend: ChatsecWeb.Gettext
 
   @doc """
   Renders a modal.

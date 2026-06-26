@@ -47,3 +47,6 @@ e2e/tests/.env
 # env file for docker
 .env
 *.log
+
+# TODO list
+TODO.md

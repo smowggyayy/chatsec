@@ -25,10 +25,7 @@ function buildMessageEl(payload, username) {
 	return { container, messageEl };
 }
 // --- event handlers ---
-async function handleKeyDown(event) {
-	if (event.shiftKey || event.key !== "Enter") return;
-	event.preventDefault();
-	const chatInput = event.currentTarget;
+async function sendMessage(chatInput) {
 	const msg = chatInput.value.trim();
 	if (!msg) return;
 	try {
@@ -43,6 +40,11 @@ async function handleKeyDown(event) {
 	} catch (_) {
 		showToast("Sending message failed!", "danger");
 	}
+}
+async function handleKeyDown(event) {
+	if (event.shiftKey || event.key !== "Enter") return;
+	event.preventDefault();
+	await sendMessage(event.currentTarget);
 }
 async function handleNewMsg(payload, username, messagesContainer) {
 	if (!payload.body) {
@@ -78,12 +80,4 @@ async function sendAndReceiveMessages(chatInput, username, channel, messagesCont
 		initialized = true;
 	}
 }
-function simulateEnterKeyPress(element) {
-	element.dispatchEvent(new KeyboardEvent("keydown", {
-		key: "Enter",
-		code: "Enter",
-		bubbles: true,
-		cancelable: true,
-	}));
-}
-export { sendAndReceiveMessages, simulateEnterKeyPress };
+export { sendAndReceiveMessages, sendMessage };

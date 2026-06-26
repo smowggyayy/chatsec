@@ -18,9 +18,9 @@ async function generateKeyPair() {
       true,
       ["deriveKey"],
     );
-  } catch (_) {
+  } catch (err) {
     showToast("Generating keys failed!", "danger");
-    throw
+    throw err;
   }
 }
 async function deriveSecretKey(privateKey, publicKey) {
@@ -32,9 +32,9 @@ async function deriveSecretKey(privateKey, publicKey) {
       true,
       ["encrypt", "decrypt"],
     );
-  } catch (_) {
+  } catch (err) {
     showToast("Deriving shared secret failed.", "danger");
-    throw
+    throw err;
   }
 }
 // --- encryption & decryption ---
@@ -48,9 +48,9 @@ async function encryptMessage(secretKey, message) {
       encoded,
     );
     return { encryptedMessage: encodeBase64(encrypted), iv: encodeBase64(iv) };
-  } catch (_) {
+  } catch (err) {
     showToast("Failed to encrypt message!", "danger");
-    throw
+    throw err;
   }
 }
 async function decryptMessage(secretKey, encryptedMessage, ivBase64) {
@@ -63,9 +63,9 @@ async function decryptMessage(secretKey, encryptedMessage, ivBase64) {
       decoded,
     );
     return new TextDecoder().decode(decrypted);
-  } catch (_) {
+  } catch (err) {
     showToast("Failed to decrypt message.", "danger");
-    throw
+    throw err;
   }
 }
 // --- key import & export ---

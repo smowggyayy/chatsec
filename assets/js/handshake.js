@@ -83,9 +83,9 @@ async function handshake(value, channel, username) {
   syn(exportedPublicKey, username, channel);
   try {
     await promise;
-  } catch (_) {
+  } catch (err) {
     showToast("Handshake timed out. Please refresh.", "danger");
-    throw
+    throw err;
   }
   showToast("Handshake completed!", "success");
   const secretKeyBase64 = await convertKeyToBase64(secretKey);

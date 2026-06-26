@@ -57,7 +57,7 @@ ENV LC_ALL=en_US.UTF-8
 WORKDIR /app
 
 # Copy release; keep ownership correct for USER nobody
-COPY --from=builder --chown=nobody:nogroup /app/_build/${MIX_ENV}/rel/chatsec ./
+COPY --from=builder --chown=nobody:nogroup /app/_build/prod/rel/chatsec ./
 
 USER nobody
 

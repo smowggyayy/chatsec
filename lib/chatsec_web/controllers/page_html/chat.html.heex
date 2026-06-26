@@ -80,7 +80,10 @@
   		chatInput.style.height = `${chatInput.scrollHeight}px`;
   	}
 
-  	document.getElementById("sendButton").addEventListener("click", () => {
+  	const sendBtn = document.getElementById("sendButton");
+  	sendBtn.addEventListener("click", () => sendMessage(chatInput));
+  	sendBtn.addEventListener("touchend", (e) => {
+  		e.preventDefault();
   		sendMessage(chatInput);
   	});
   	document

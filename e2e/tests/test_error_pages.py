@@ -40,12 +40,10 @@ def test_chat_access_denied(setup):
     # Alice creates a new chat
     alice = setup['browser'].new_context(ignore_https_errors=True).new_page()
     alice.goto(f"https://{IP}:{PORT}/")
-    alice.click("text='Set username'")
+    alice.click("text='Start a chat'")
+    alice.wait_for_url(re.compile(r"/chat/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
     alice.get_by_placeholder("Username").fill("Alice")
     alice.click("text='Submit'")
-    alice.click("text='Start a chat'")
-    # Wait for the URL to match the regex pattern for UUID4
-    alice.wait_for_url(re.compile(r"/chat/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
     chatroom = alice.url
 
     # Bob joins the chat
@@ -62,4 +60,3 @@ def test_chat_access_denied(setup):
     geronimo.click("text='Submit'")
     time.sleep(1)
     expect(geronimo).to_have_title(re.compile("ChatSec"))
-

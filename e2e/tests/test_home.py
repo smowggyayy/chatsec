@@ -26,7 +26,8 @@ def test_opening_page(setup):
 
 def test_set_username_manual(setup):
     page = setup
-    page.click("text='Set username'")
+    page.click("text='Start a chat'")
+    page.wait_for_url(re.compile(r"/chat/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
     page.locator("text='Enter Username'").wait_for(state="visible")
     page.get_by_placeholder("Username").fill("Playwright")
     page.click("text='Submit'")
@@ -34,7 +35,8 @@ def test_set_username_manual(setup):
 
 def test_set_username_random(setup):
     page = setup
-    page.click("text='Set username'")
+    page.click("text='Start a chat'")
+    page.wait_for_url(re.compile(r"/chat/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"))
     page.locator("text='Enter Username'").wait_for(state="visible")
     page.click("text='Random'")
     page.click("text='Submit'")

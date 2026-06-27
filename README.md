@@ -23,11 +23,11 @@ ChatSec uses **Elliptic-curve Diffie–Hellman (ECDH)** key exchange via the bro
 4. All subsequent messages are encrypted with that secret before leaving the browser.
 5. **Messages are broadcast only once** and never persisted.
 
-Chat history is lost on room deletion, both users leaving, or a browser refresh. There is no way to recover it.
+Chat history is lost on room deletion, both users leaving, or a browser refresh. There is no way to recover it!
 
 ---
 
-## Public instance
+## Public instance 🤠
 
 A public instance is available at [chatsec.app](https://chatsec.app).
 

@@ -6,11 +6,15 @@ import Config
 # which you should run after static files are built and
 # before starting your production server.
 config :chatsec, ChatsecWeb.Endpoint,
-  cache_static_manifest: "priv/static/cache_manifest.json",
-  # Traefik terminates TLS and proxies to this app over plain HTTP, so the
-  # scheme must be read from X-Forwarded-Proto (which Traefik sets) rather
-  # than the raw connection, or force_ssl would redirect every request in a loop.
-  force_ssl: [hsts: true, rewrite_on: [:x_forwarded_proto]]
+  cache_static_manifest: "priv/static/cache_manifest.json"
+
+# Read manually by ChatsecWeb.Endpoint (not via Phoenix's own :force_ssl key,
+# which it would wire up unconditionally in front of every request including
+# websocket upgrades) so the socket transport paths can skip it — see the
+# comment above `force_ssl_except_sockets/2` in endpoint.ex for why.
+config :chatsec, :force_ssl,
+  hsts: true,
+  rewrite_on: [:x_forwarded_proto]
 
 # Configures Swoosh API Client
 config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: Chatsec.Finch

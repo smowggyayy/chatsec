@@ -51,6 +51,24 @@ defmodule ChatsecWeb.Endpoint do
     same_site: "Lax"
   ]
 
+  # Set only in config/prod.exs. Applied by hand below (instead of Phoenix's
+  # own :force_ssl key, which it wires up unconditionally ahead of
+  # `socket_dispatch`) because production put every websocket upgrade through
+  # it too, and on chatsec.app's Cloudflare+Traefik chain the upgrade request
+  # apparently doesn't carry the same X-Forwarded-Proto that a normal request
+  # does — force_ssl saw it as plain HTTP and 301-redirected it to itself, a
+  # response no browser's WebSocket client can follow. Every wss:// connection
+  # to production failed this way. Traefik's own :80 entrypoint already
+  # refuses plain HTTP before this app ever sees it, and a redirect is never
+  # valid protocol behavior mid-handshake anyway, so the socket paths just
+  # skip this plug entirely rather than depend on that header being correct.
+  @force_ssl_opts (case Application.compile_env(:chatsec, :force_ssl) do
+                     nil -> nil
+                     opts -> Plug.SSL.init(Keyword.put_new(opts, :host, {__MODULE__, :host, []}))
+                   end)
+
+  plug :force_ssl_except_sockets
+
   socket "/live", Phoenix.LiveView.Socket,
     websocket: [connect_info: [session: @session_options]],
     longpoll: [connect_info: [session: @session_options]]
@@ -109,5 +127,16 @@ defmodule ChatsecWeb.Endpoint do
       "content-security-policy" => @content_security_policy,
       "permissions-policy" => @permissions_policy
     })
+  end
+
+  defp force_ssl_except_sockets(conn, _opts) do
+    case @force_ssl_opts do
+      nil -> conn
+      opts -> if socket_path?(conn), do: conn, else: Plug.SSL.call(conn, opts)
+    end
+  end
+
+  defp socket_path?(conn) do
+    match?(["socket" | _], conn.path_info) or match?(["live" | _], conn.path_info)
   end
 end

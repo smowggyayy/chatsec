@@ -8,7 +8,7 @@ from conftest import ROOM_PATH_RE
 def test_unknown_room_shows_room_not_found(page, base_url):
     page.goto(f"{base_url}/chat/does-not-exist")
 
-    expect(page.get_by_text("Room Not Found")).to_be_visible()
+    expect(page.get_by_text("Room not found")).to_be_visible()
     expect(page.get_by_role("link", name="Go home")).to_be_visible()
     expect(page.locator("#create-room-button")).to_be_visible()
 
@@ -25,5 +25,5 @@ def test_unknown_path_shows_404(page, base_url):
     page.goto(f"{base_url}/not-a-real-path")
 
     expect(page.get_by_text("404")).to_be_visible()
-    expect(page.get_by_text("Page Not Found")).to_be_visible()
+    expect(page.get_by_text("Page not found")).to_be_visible()
     expect(page.get_by_role("link", name="Go home")).to_be_visible()

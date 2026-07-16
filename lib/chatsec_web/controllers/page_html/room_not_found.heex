@@ -1,25 +1,45 @@
-<section class="flex items-center justify-center mt-8">
-  <div class="text-center">
-    <h1 class="text-9xl font-extrabold text-white">Sorry.</h1>
-    <p class="text-2xl font-semibold text-gray-700 mt-4">Room Not Found</p>
-    <p class="text-gray-500 mt-2 mb-6">
-      The room you're looking for is private or doesn't exist.
-    </p>
+<div class="relative flex h-dvh items-center justify-center overflow-hidden bg-gray-900 px-6 text-center text-white">
+  <div class="pointer-events-none fixed inset-0 overflow-hidden">
+    <div class="absolute -top-24 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-violet-600/20 blur-3xl">
+    </div>
+  </div>
 
-    <div class="mt-3 flex justify-center items-center space-x-3">
+  <div class="relative flex flex-col items-center">
+    <div class="drop-shadow-[0_0_40px_rgba(139,92,246,0.35)]">
+      <svg viewBox="0 0 200 200" class="h-16 w-16" aria-hidden="true">
+        <defs>
+          <linearGradient id="logoGradRoomNotFound" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#a78bfa" />
+            <stop offset="100%" stop-color="#4c1d95" />
+          </linearGradient>
+        </defs>
+        <path
+          d="M58 134C56 152 48 168 34 180C57 173 74 158 82 136Z"
+          fill="url(#logoGradRoomNotFound)"
+        />
+        <rect x="20" y="24" width="160" height="116" rx="36" fill="url(#logoGradRoomNotFound)" />
+        <circle cx="100" cy="72" r="17" fill="#f5f3ff" />
+        <path d="M91 84L109 84L116 114Q100 124 84 114Z" fill="#f5f3ff" />
+      </svg>
+    </div>
+
+    <h1 class="mt-6 text-7xl font-extrabold tracking-tight text-white sm:text-8xl">Sorry.</h1>
+    <p class="mt-4 text-xl font-semibold text-white">Room not found</p>
+    <p class="mt-2 max-w-sm text-gray-400">This room is private or doesn't exist.</p>
+
+    <div class="mt-8 flex items-center gap-3">
       <a
         href="/"
-        class="bg-emerald-500 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded transition duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 shadow-md"
+        class="rounded-lg bg-gray-700 px-6 py-3 font-bold text-white shadow-md transition duration-200 ease-in-out hover:scale-105 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
       >
         Go home
       </a>
-      <p class="text-white">or</p>
       <button
         id="create-room-button"
-        class="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 shadow-md"
+        class="rounded-lg bg-violet-500 px-6 py-3 font-bold text-white shadow-md transition duration-200 ease-in-out hover:scale-105 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-opacity-50"
       >
         Create room
       </button>
     </div>
   </div>
-</section>
+</div>

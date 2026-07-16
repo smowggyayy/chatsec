@@ -58,12 +58,6 @@ function bindStaticButtons() {
     document.getElementById("donate-button")?.addEventListener("click", donateModal);
     document.getElementById("invite-button")?.addEventListener("click", copyChatUrl);
 }
-function initTellMeMore() {
-    document.getElementById("tell-me-more")?.addEventListener("click", () => {
-        document.getElementById("short-text").classList.add("hidden");
-        document.getElementById("full-text-container").classList.remove("hidden");
-    });
-}
 function initChatPage() {
     const chatInput = document.getElementById("chat-input");
     if (!chatInput) return;
@@ -99,6 +93,5 @@ const liveSocket = initLiveSocket();
 initProgressBar();
 registerGlobals(liveSocket);
 bindStaticButtons();
-initTellMeMore();
 initChatPage();
 easterEgg();

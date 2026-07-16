@@ -11,16 +11,20 @@ def test_home_page_loads(page, base_url):
     expect(page.locator("h1", has_text="CHATSEC")).to_be_visible()
 
 
-def test_tell_me_more_expands_and_hides_short_text(page, base_url):
+def test_feature_highlights_and_how_it_works_are_visible(page, base_url):
     page.goto(base_url)
-    expect(page.locator("#full-text-container")).to_be_hidden()
-    expect(page.locator("#short-text")).to_be_visible()
 
-    page.click("#tell-me-more")
+    expect(page.get_by_text("True end-to-end encryption")).to_be_visible()
+    expect(page.get_by_text("Nothing is stored")).to_be_visible()
+    expect(page.get_by_text("Verify your connection")).to_be_visible()
 
-    expect(page.locator("#full-text-container")).to_be_visible()
-    expect(page.locator("#short-text")).to_be_hidden()
-    expect(page.locator("#full-text-container")).to_contain_text("Chatsec is a open-source")
+    expect(page.get_by_role("heading", name="How it works")).to_be_visible()
+
+
+def test_github_link_points_at_the_repo(page, base_url):
+    page.goto(base_url)
+    link = page.get_by_role("link", name="View source on GitHub")
+    expect(link).to_have_attribute("href", "https://github.com/50022445/chatsec")
 
 
 def test_donate_modal_opens_and_closes(page, base_url):

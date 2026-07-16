@@ -64,7 +64,6 @@ def test_no_csp_violations_reported_while_using_the_app(page, base_url):
     )
 
     page.goto(base_url)
-    page.click("#tell-me-more")
     page.click("#donate-button")
     page.click("#closeModalButton")
     page.click("#start-chat-button")

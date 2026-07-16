@@ -38,8 +38,6 @@ npm-debug.log
 # Elixir-lS
 .elixir_ls
 
-# End to end test folder
-e2e/
 
 # env file for docker
 .env
@@ -47,3 +45,7 @@ e2e/
 
 # TODO list
 TODO.md
+
+# Claude config and tooling
+.claude
+CLAUDE.md

@@ -1,4 +1,10 @@
 import { showToast } from "./toast";
+import { openModal, modalShell, BTN_PRIMARY, BTN_SECONDARY, INPUT_CLASS } from "./modal";
+const LINK_ICON = `
+  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"/>
+  </svg>
+`;
 async function copyToClipboard(url) {
 	try {
 		await navigator.clipboard.writeText(url);
@@ -9,47 +15,20 @@ async function copyToClipboard(url) {
 }
 function copyChatUrl() {
 	const url = location.href;
-	const portal = document.getElementById("portal");
-	const root = document.getElementById("root");
-	const container = document.createElement("div");
-	container.innerHTML = `
-    <div id="copyUrlModal" class="modal fixed inset-0 flex items-center justify-center z-50">
-      <div class="p-8 bg-gray-900 rounded-lg max-w-sm w-full">
-        <h2 class="text-2xl font-bold text-white mb-4">Invite users</h2>
-        <div class="mb-4">
-          <input type="text" id="walletAddress"
-                 value="${url}"
-                 class="w-full p-2 border focus:outline-none focus:ring-2
-                        focus:ring-green-500 focus:border-transparent bg-gray-800
-                        text-white placeholder-gray-500 rounded-md" readonly>
-        </div>
-        <div class="flex justify-end">
-          <button id="closeModalButton"
-                  class="bg-pink-500 hover:bg-pink-700 text-white font-bold px-4 py-2 rounded mr-2
-                         transition duration-200 ease-in-out transform hover:scale-105
-                         focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50 shadow-md">
-            Cancel
-          </button>
-          <button id="submitModalButton"
-                  class="bg-emerald-500 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded
-                         transition duration-200 ease-in-out transform hover:scale-105
-                         focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-opacity-50 shadow-md">
-            Copy URL
-          </button>
-        </div>
-      </div>
+	const body = `
+    <input type="text" id="walletAddress"
+           value="${url}"
+           class="${INPUT_CLASS} mb-4" readonly>
+    <div class="flex justify-end gap-2">
+      <button id="closeModalButton" class="${BTN_SECONDARY}">Cancel</button>
+      <button id="submitModalButton" class="${BTN_PRIMARY}">Copy URL</button>
     </div>
   `;
-	portal.appendChild(container);
-	root.classList.add("blur-2xl");
-	function closeModal() {
-		portal.removeChild(container);
-		root.classList.remove("blur-2xl");
-	}
-	container.querySelector("#closeModalButton").addEventListener("click", closeModal);
-	container.querySelector("#submitModalButton").addEventListener("click", () => {
+	const { close } = openModal("copyUrlModal", modalShell(LINK_ICON, "Invite users", body));
+	document.getElementById("closeModalButton").addEventListener("click", close);
+	document.getElementById("submitModalButton").addEventListener("click", () => {
 		copyToClipboard(url);
-		closeModal();
+		close();
 	});
 }
 export { copyToClipboard, copyChatUrl };

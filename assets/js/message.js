@@ -8,14 +8,15 @@ const OTHER_COLOR = "rgb(255, 128, 197)";
 let secretKey;
 let currentChannel;
 let currentUsername;
+let currentMessagesContainer;
+let currentFingerprint;
 let initialized = false;
 // --- dom helpers ---
-function buildMessageEl(payload, username) {
-	const isSelf = payload.username === username;
+function buildMessageEl(messageUsername, isSelf) {
 	const usernameEl = document.createElement("span");
 	usernameEl.className = `text-xs font-semibold mb-1.5 ${isSelf ? "text-right" : "text-left"}`;
 	usernameEl.style.color = isSelf ? SELF_COLOR : OTHER_COLOR;
-	usernameEl.innerText = payload.username;
+	usernameEl.innerText = messageUsername;
 	const messageEl = document.createElement("p");
 	messageEl.className = [
 		"text-sm leading-relaxed break-words whitespace-pre-wrap px-3 py-2 rounded-2xl max-w-[75vw] md:max-w-sm shadow",
@@ -29,17 +30,30 @@ function buildMessageEl(payload, username) {
 	container.appendChild(messageEl);
 	return { container, messageEl };
 }
+function renderMessage(messageUsername, text, isSelf) {
+	const { container, messageEl } = buildMessageEl(messageUsername, isSelf);
+	messageEl.innerText = text;
+	currentMessagesContainer.appendChild(container);
+	container.scrollIntoView({ behavior: "smooth", block: "end" });
+}
 // --- event handlers ---
 async function sendMessage(chatInput) {
 	const msg = chatInput.value.trim();
 	if (!msg) return;
+	if (!secretKey || !currentChannel) {
+		showToast("Still connecting, please wait...", "danger");
+		return;
+	}
 	try {
-		const { encryptedMessage, iv } = await encryptMessage(secretKey, msg);
+		const { encryptedMessage, iv } = await encryptMessage(secretKey, msg, currentUsername);
 		currentChannel.push("new_msg", {
 			username: currentUsername,
 			body: encryptedMessage,
 			iv,
 		});
+		// The server only echoes this back to the other peer (broadcast_from!),
+		// so render our own copy immediately instead of waiting on a round trip.
+		renderMessage(currentUsername, msg, true);
 		chatInput.value = "";
 		chatInput.style.height = "40px";
 	} catch (_) {
@@ -51,17 +65,14 @@ async function handleKeyDown(event) {
 	event.preventDefault();
 	await sendMessage(event.currentTarget);
 }
-async function handleNewMsg(payload, username, messagesContainer) {
+async function handleNewMsg(payload) {
 	if (!payload.body) {
 		console.warn("Received message with no body", payload);
 		return;
 	}
 	try {
-		const decrypted = await decryptMessage(secretKey, payload.body, payload.iv);
-		const { container, messageEl } = buildMessageEl(payload, username);
-		messageEl.innerText = decrypted;
-		messagesContainer.appendChild(container);
-		container.scrollIntoView({ behavior: "smooth", block: "end" });
+		const decrypted = await decryptMessage(secretKey, payload.body, payload.iv, payload.username);
+		renderMessage(payload.username, decrypted, false);
 	} catch (_) {
 		showToast("Failed to decrypt message.", "danger");
 	}
@@ -71,19 +82,25 @@ function handleRoomDeleted() {
 	window.location.href = "/";
 }
 // --- public api ---
+// Resolves to the connection fingerprint once ready, so the caller can
+// surface it in the UI for out-of-band verification.
 async function sendAndReceiveMessages(chatInput, username, channel, messagesContainer) {
 	const channelOrUserChanged = currentChannel !== channel || currentUsername !== username;
 	if (!secretKey || channelOrUserChanged) {
-		secretKey = await handshake(null, channel, username);
+		const result = await handshake(null, channel, username);
+		secretKey = result.secretKey;
+		currentFingerprint = result.fingerprint;
 		currentChannel = channel;
 		currentUsername = username;
 		initialized = false;
 	}
+	currentMessagesContainer = messagesContainer;
 	if (!initialized) {
 		chatInput.addEventListener("keydown", handleKeyDown);
-		channel.on("new_msg", (payload) => handleNewMsg(payload, username, messagesContainer));
+		channel.on("new_msg", handleNewMsg);
 		channel.on("room_deleted", handleRoomDeleted);
 		initialized = true;
 	}
+	return currentFingerprint;
 }
 export { sendAndReceiveMessages, sendMessage };

@@ -1,73 +1,134 @@
-<div class="text-center mt-8 scroll-auto">
-  <h1 class="text-6xl font-bold text-white">CHATSEC</h1>
-</div>
-
-<div class="flex justify-center m-8">
-  <button
-    class="bg-violet-500 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded transition duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-opacity-50 shadow-md"
-    onclick="redirectUserToChat()"
-  >
-    Start a chat
-  </button>
-</div>
-
-<div class="container mx-auto px-4 flex justify-center space-x-0 sm:space-x-8">
-  <div class="w-full sm:w-2/3 bg-gray-800 p-4 sm:p-8 rounded-lg shadow-lg">
-    <p id="short-text" class="text-base sm:text-lg text-white leading-relaxed">
-      End-to-end encryption is crucial for protecting the privacy and security of digital communications, ensuring
-      that only the intended recipients can read the messages.<br />
-      <span id="tell-me-more" class="text-blue-500 cursor-pointer">
-        Tell me more...
-      </span>
-    </p>
-    <div id="full-text-container" class="hidden h-60 sm:h-80 md:h-auto overflow-y-auto">
-      <p id="full-text" class="text-base sm:text-lg text-white leading-relaxed">
-        End-to-end encryption is crucial for protecting the privacy and security of digital communications, ensuring
-        that only the intended recipients can read the messages.
-        This form of encryption prevents unauthorized access by hackers, <span class="text-red-600">government
-                  agencies</span>, and even the service providers themselves, safeguarding sensitive information from
-        being intercepted or tampered with.
-        Digital freedom, on the other hand, encompasses the right to access, create, and share information freely
-        and securely on the internet.
-        Together, end-to-end encryption and digital freedom form the bedrock of a free and open digital society,
-        empowering individuals to communicate and collaborate without fear of surveillance or censorship.
-        <br />&nbsp;<br />
-        Chatsec is a open-source, free to use chat application.
-        More information on Chatsec, the source-code and a how-to guide on hosting your own version can be found on
-        <a
-          href="https://github.com/50022445/chatsec"
-          target="_blank"
-          class="inline-flex items-center hover:underline text-teal-500"
-        >
-          Github
-          <svg
-            class="w-4 h-4 ml-2"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="currentColor"
-            viewBox="0 0 16 16"
-          >
-            <path d="M8 0C3.58 0 0 3.58 0 8a8.001 8.001 0 005.47 7.59c.4.074.55-.174.55-.385 0-.19-.007-.693-.01-1.36-2.01.437-2.43-.975-2.43-.975-.364-.924-.89-1.17-.89-1.17-.726-.497.055-.487.055-.487.803.056 1.226.826 1.226.826.714 1.223 1.873.87 2.33.665.073-.518.279-.87.508-1.07-1.6-.18-3.286-.8-3.286-3.56 0-.787.28-1.432.736-1.936-.074-.18-.32-.903.07-1.88 0 0 .604-.193 1.98.737a6.939 6.939 0 011.805-.243c.612.003 1.228.083 1.805.243 1.377-.93 1.98-.737 1.98-.737.39.977.144 1.7.07 1.88.456.504.735 1.15.735 1.936 0 2.77-1.688 3.38-3.295 3.56.287.248.543.734.543 1.48 0 1.07-.01 1.934-.01 2.2 0 .213.147.462.554.384A8.001 8.001 0 0016 8c0-4.42-3.58-8-8-8z" />
-          </svg>
-        </a>
-      </p>
+<div class="relative h-full overflow-y-auto">
+  <div class="pointer-events-none fixed inset-0 overflow-hidden">
+    <div class="absolute -top-24 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-violet-600/20 blur-3xl">
     </div>
   </div>
+
+  <div class="relative flex min-h-full flex-col">
+    <header class="flex items-center justify-between px-6 py-5 sm:px-10">
+      <div class="flex items-center gap-2.5">
+        <svg viewBox="0 0 200 200" class="h-7 w-7" aria-hidden="true">
+          <defs>
+            <linearGradient id="logoGradSmall" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#a78bfa" />
+              <stop offset="100%" stop-color="#4c1d95" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M58 134C56 152 48 168 34 180C57 173 74 158 82 136Z"
+            fill="url(#logoGradSmall)"
+          />
+          <rect x="20" y="24" width="160" height="116" rx="36" fill="url(#logoGradSmall)" />
+          <circle cx="100" cy="72" r="17" fill="#f5f3ff" />
+          <path d="M91 84L109 84L116 114Q100 124 84 114Z" fill="#f5f3ff" />
+        </svg>
+        <span class="font-bold tracking-tight text-white">ChatSec</span>
+      </div>
+      <a
+        href="https://github.com/50022445/chatsec"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="View source on GitHub"
+        class="text-gray-400 transition hover:text-white"
+      >
+        <svg class="h-6 w-6" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 0C3.58 0 0 3.58 0 8a8.001 8.001 0 005.47 7.59c.4.074.55-.174.55-.385 0-.19-.007-.693-.01-1.36-2.01.437-2.43-.975-2.43-.975-.364-.924-.89-1.17-.89-1.17-.726-.497.055-.487.055-.487.803.056 1.226.826 1.226.826.714 1.223 1.873.87 2.33.665.073-.518.279-.87.508-1.07-1.6-.18-3.286-.8-3.286-3.56 0-.787.28-1.432.736-1.936-.074-.18-.32-.903.07-1.88 0 0 .604-.193 1.98.737a6.939 6.939 0 011.805-.243c.612.003 1.228.083 1.805.243 1.377-.93 1.98-.737 1.98-.737.39.977.144 1.7.07 1.88.456.504.735 1.15.735 1.936 0 2.77-1.688 3.38-3.295 3.56.287.248.543.734.543 1.48 0 1.07-.01 1.934-.01 2.2 0 .213.147.462.554.384A8.001 8.001 0 0016 8c0-4.42-3.58-8-8-8z" />
+        </svg>
+      </a>
+    </header>
+
+    <main class="flex flex-1 flex-col items-center px-6 pb-16 pt-6 text-center sm:pt-10">
+      <div class="drop-shadow-[0_0_40px_rgba(139,92,246,0.35)]">
+        <svg viewBox="0 0 200 200" class="h-20 w-20 sm:h-24 sm:w-24" aria-hidden="true">
+          <defs>
+            <linearGradient id="logoGradHero" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#a78bfa" />
+              <stop offset="100%" stop-color="#4c1d95" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M58 134C56 152 48 168 34 180C57 173 74 158 82 136Z"
+            fill="url(#logoGradHero)"
+          />
+          <rect x="20" y="24" width="160" height="116" rx="36" fill="url(#logoGradHero)" />
+          <circle cx="100" cy="72" r="17" fill="#f5f3ff" />
+          <path d="M91 84L109 84L116 114Q100 124 84 114Z" fill="#f5f3ff" />
+        </svg>
+      </div>
+
+      <h1 class="mt-6 text-5xl font-bold tracking-tight text-white sm:text-6xl">CHATSEC</h1>
+      <p class="mt-4 max-w-md text-base text-gray-400 sm:text-lg">
+        End-to-end encrypted, ephemeral chat. No accounts. No logs. No history.
+      </p>
+
+      <button
+        id="start-chat-button"
+        class="mt-8 rounded-lg bg-violet-500 px-6 py-3 font-bold text-white shadow-md transition duration-200 ease-in-out hover:scale-105 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-opacity-50"
+      >
+        Start a chat
+      </button>
+
+      <div class="mt-20 grid w-full max-w-3xl grid-cols-1 gap-4 text-left sm:mt-24 sm:grid-cols-3 sm:gap-6">
+        <div class="rounded-xl border border-gray-700 bg-gray-800/60 p-5">
+          <.icon name="hero-lock-closed" class="h-6 w-6 text-violet-400" />
+          <h3 class="mt-3 font-semibold text-white">True end-to-end encryption</h3>
+          <p class="mt-1 text-sm leading-relaxed text-gray-400">
+            Keys are generated in your browser and never leave it. The server only ever relays ciphertext — it can't read your messages, and neither can anyone watching it.
+          </p>
+        </div>
+        <div class="rounded-xl border border-gray-700 bg-gray-800/60 p-5">
+          <.icon name="hero-server" class="h-6 w-6 text-violet-400" />
+          <h3 class="mt-3 font-semibold text-white">Nothing is stored</h3>
+          <p class="mt-1 text-sm leading-relaxed text-gray-400">
+            No accounts, no history, no logs. Close the tab, delete the room, or just walk away — the conversation is gone for good.
+          </p>
+        </div>
+        <div class="rounded-xl border border-gray-700 bg-gray-800/60 p-5">
+          <.icon name="hero-finger-print" class="h-6 w-6 text-violet-400" />
+          <h3 class="mt-3 font-semibold text-white">Verify your connection</h3>
+          <p class="mt-1 text-sm leading-relaxed text-gray-400">
+            Every chat has a Verify code derived from both sides' keys. Compare it out loud to confirm nobody is intercepting your handshake.
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-20 w-full max-w-2xl sm:mt-24">
+        <h2 class="text-xl font-semibold text-white">How it works</h2>
+        <ol class="mt-6 space-y-4 text-left text-sm text-gray-400 sm:text-base">
+          <li class="flex gap-3">
+            <span class="font-bold text-violet-400">1.</span>
+            <span>Start a chat — a private room is created with an unguessable link.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="font-bold text-violet-400">2.</span>
+            <span>Share the link with one other person. Rooms are capped at two people.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="font-bold text-violet-400">3.</span>
+            <span>Your browsers exchange keys automatically (ECDH) and derive a shared secret — the server never sees it.</span>
+          </li>
+          <li class="flex gap-3">
+            <span class="font-bold text-violet-400">4.</span>
+            <span>Everything you send is encrypted (AES-GCM) before it ever leaves your device.</span>
+          </li>
+        </ol>
+      </div>
+    </main>
+
+    <footer class="flex items-center justify-center gap-3 px-6 py-8 text-sm text-gray-500">
+      <a
+        href="https://github.com/50022445/chatsec"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="transition hover:text-gray-300"
+      >
+        Open source
+      </a>
+      <span aria-hidden="true">·</span>
+      <button id="donate-button" class="inline-flex items-center gap-1.5 transition hover:text-gray-300">
+        <img src={~p"/images/monero_logo.png"} alt="" class="h-4 w-4" />
+        Donate
+      </button>
+    </footer>
+  </div>
 </div>
-
-<script>
-  document.getElementById('tell-me-more').addEventListener('click', function() {
-    document.getElementById('short-text').classList.add('hidden');
-    document.getElementById('full-text-container').classList.remove('hidden');
-  });
-</script>
-
-<footer class="fixed bottom-0 right-0 z-20 w-full flex justify-end p-4 md:p-6 dark:bg-gray-900">
-  <button onclick="donateModal()">
-    <img
-      src={~p"/images/monero_logo.png"}
-      alt="Footer Image"
-      class="h-8 w-8 md:h-10 md:w-10 duration-200 ease-in-out transform hover:scale-125"
-    />
-  </button>
-</footer>

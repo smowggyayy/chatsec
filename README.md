@@ -1,3 +1,9 @@
+<p align="center">
+  <a href="https://chatsec.app">
+    <img src="priv/static/images/logo.svg" alt="ChatSec logo" width="96" />
+  </a>
+</p>
+
 # [ChatSec 🔒](https://chatsec.app)
 
 **ChatSec** is an end-to-end encrypted, ephemeral chat application built with [Elixir](https://elixir-lang.org/) and the [Phoenix Framework](https://www.phoenixframework.org/). No accounts, no logs, no history — just a secure, private conversation.

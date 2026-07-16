@@ -1,4 +1,4 @@
-<div class="flex flex-col bg-gray-900 text-white" style="height: 100dvh;">
+<div class="flex flex-col bg-gray-900 text-white h-dvh">
   <%!-- Header --%>
   <header class="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
     <div>
@@ -9,7 +9,14 @@
     </div>
     <div class="flex gap-2">
       <button
-        onclick="copyChatUrl()"
+        id="verify-button"
+        class="hidden bg-gray-700 hover:bg-gray-600 active:bg-gray-800 text-white font-bold py-1.5 px-3 rounded-lg transition duration-150 focus:outline-none focus:ring-2 focus:ring-gray-500 text-sm"
+        title="Verify this connection hasn't been intercepted"
+      >
+        Verify
+      </button>
+      <button
+        id="invite-button"
         class="bg-cyan-500 hover:bg-cyan-700 active:bg-cyan-800 text-white font-bold py-1.5 px-3 rounded-lg transition duration-150 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
       >
         Invite
@@ -37,11 +44,10 @@
     <div class="flex items-end gap-2 bg-gray-800 rounded-2xl px-3 py-2">
       <textarea
         id="chat-input"
-        class="flex-1 bg-transparent text-white placeholder-gray-500 resize-none focus:outline-none leading-relaxed"
-        style="max-height:120px; min-height:24px; font-size: 16px;"
+        class="flex-1 bg-transparent text-white placeholder-gray-500 resize-none focus:outline-none leading-relaxed max-h-[120px] min-h-[24px] text-[16px]"
         placeholder="Message..."
         rows="1"
-        oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px'"
+        maxlength="2000"
       ></textarea>
       <button
         id="sendButton"
@@ -60,26 +66,3 @@
     </div>
   </footer>
 </div>
-
-<script type="text/javascript">
-  document.addEventListener("DOMContentLoaded", () => {
-  	const chatInput = document.getElementById("chat-input");
-  	const messagesContainer = document.getElementById("messages");
-
-  	const sendBtn = document.getElementById("sendButton");
-  	sendBtn.addEventListener("click", () => sendMessage(chatInput));
-  	sendBtn.addEventListener("touchend", (e) => {
-  		e.preventDefault();
-  		sendMessage(chatInput);
-  	});
-  	document
-  		.getElementById("showDeleteChatModal")
-  		.addEventListener("click", () => {
-  			showDeleteChatModal(window.channel, sessionStorage.getItem("username"));
-  		});
-
-  	checkAndConnect(null, (channel, username) => {
-  		sendAndReceiveMessages(chatInput, username, channel, messagesContainer);
-  	});
-  });
-</script>

@@ -39,7 +39,7 @@ function usernameForm() {
       <div id="usernameModal" class="modal fixed inset-0 flex items-center justify-center blur-none z-50">
         <div class="p-8 bg-gray-900 rounded-lg max-w-sm w-full blur-none">
           <h2 class="text-2xl font-bold text-white mb-4">Enter Username</h2>
-          <input type="text" id="usernameInput"
+          <input type="text" id="usernameInput" maxlength="32"
                  class="w-full p-2 border focus:outline-none focus:ring-2 focus:ring-green-500
                         focus:border-transparent bg-gray-800 text-white placeholder-gray-500 rounded-md mb-4"
                  placeholder="Username">

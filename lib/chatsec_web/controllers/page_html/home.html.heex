@@ -4,8 +4,8 @@
 
 <div class="flex justify-center m-8">
   <button
+    id="start-chat-button"
     class="bg-violet-500 hover:bg-violet-700 text-white font-bold py-2 px-4 rounded transition duration-200 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-opacity-50 shadow-md"
-    onclick="redirectUserToChat()"
   >
     Start a chat
   </button>
@@ -55,15 +55,8 @@
   </div>
 </div>
 
-<script>
-  document.getElementById('tell-me-more').addEventListener('click', function() {
-    document.getElementById('short-text').classList.add('hidden');
-    document.getElementById('full-text-container').classList.remove('hidden');
-  });
-</script>
-
 <footer class="fixed bottom-0 right-0 z-20 w-full flex justify-end p-4 md:p-6 dark:bg-gray-900">
-  <button onclick="donateModal()">
+  <button id="donate-button">
     <img
       src={~p"/images/monero_logo.png"}
       alt="Footer Image"

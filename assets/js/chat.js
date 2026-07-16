@@ -44,7 +44,9 @@ function checkAndConnect(value, callback) {
   connectToChannel(username, callback);
 }
 function connectToChannel(username, callback) {
-  const socket = new Socket("/socket", { params: { username } });
+  // Paired with the shorter server-side idle timeout (endpoint.ex) so a
+  // dropped connection is noticed - and the room slot freed - faster.
+  const socket = new Socket("/socket", { params: { username }, heartbeatIntervalMs: 15_000 });
   socket.connect();
   const uuid = window.location.href.split("/").at(-1);
   const channel = socket.channel(`room:${uuid}`, { username });

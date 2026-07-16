@@ -3,6 +3,7 @@ import {
   deriveSecretKey,
   generateKeyPair,
   exportPublicKey,
+  computeFingerprint,
 } from "./encrypt";
 import { showToast } from "./toast";
 const HANDSHAKE_TIMEOUT_MS = 30_000;
@@ -61,19 +62,33 @@ function awaitAcknowledgement() {
   return { promise, acknowledge };
 }
 // --- public api ---
+// Resolves to { secretKey, fingerprint }. The fingerprint lets both people
+// confirm out of band that they derived a key with each other and not a
+// relay sitting in the middle of the exchange.
 async function handshake(value, channel, username) {
   const uuid = window.location.href.split("/").at(-1);
   const cached = value ?? sessionStorage.getItem(uuid);
-  if (cached) return convertBase64ToKey(cached);
+  if (cached) {
+    try {
+      const { secretKeyBase64, fingerprint } = JSON.parse(cached);
+      if (secretKeyBase64 && fingerprint) {
+        return { secretKey: await convertBase64ToKey(secretKeyBase64), fingerprint };
+      }
+    } catch (_) {
+      // fall through to a fresh handshake below
+    }
+  }
   const pubkeyMap = new Map();
   const { keyPair, exportedPublicKey } = await generateAndAddToMap(username, pubkeyMap);
   const { promise, acknowledge } = awaitAcknowledgement();
   let secretKey;
+  let peerPublicKey;
   channel.on("publickey", async (payload) => {
     const { publickey: pubkey, username: user } = payload;
     if (user === username || pubkeyMap.has(pubkey)) return;
     try {
       secretKey = await getAndConvertPublicKey(pubkey, user, pubkeyMap, keyPair.privateKey);
+      peerPublicKey = pubkey;
       syn(exportedPublicKey, username, channel);
       acknowledge();
     } catch (_) {
@@ -88,8 +103,9 @@ async function handshake(value, channel, username) {
     throw err;
   }
   showToast("Handshake completed!", "success");
+  const fingerprint = await computeFingerprint(exportedPublicKey, peerPublicKey);
   const secretKeyBase64 = await convertKeyToBase64(secretKey);
-  sessionStorage.setItem(uuid, secretKeyBase64);
-  return secretKey;
+  sessionStorage.setItem(uuid, JSON.stringify({ secretKeyBase64, fingerprint }));
+  return { secretKey, fingerprint };
 }
 export { handshake };

@@ -8,6 +8,7 @@ import { copyChatUrl } from "./link.js";
 import { handshake } from "./handshake.js";
 import { sendAndReceiveMessages, sendMessage } from "./message.js";
 import { donateModal } from "./donate.js";
+import { setFingerprint, showFingerprintModal } from "./fingerprint.js";
 function initLiveSocket() {
     const csrfToken = document
         .querySelector("meta[name='csrf-token']")
@@ -51,8 +52,46 @@ function easterEgg() {
         + '21px 21px 0 rgb(42,21,113)'
     );
 }
+function bindStaticButtons() {
+    document.getElementById("start-chat-button")?.addEventListener("click", redirectUserToChat);
+    document.getElementById("create-room-button")?.addEventListener("click", redirectUserToChat);
+    document.getElementById("donate-button")?.addEventListener("click", donateModal);
+    document.getElementById("invite-button")?.addEventListener("click", copyChatUrl);
+}
+function initChatPage() {
+    const chatInput = document.getElementById("chat-input");
+    if (!chatInput) return;
+    const messagesContainer = document.getElementById("messages");
+    chatInput.addEventListener("input", () => {
+        chatInput.style.height = "auto";
+        chatInput.style.height = `${chatInput.scrollHeight}px`;
+    });
+    const sendBtn = document.getElementById("sendButton");
+    sendBtn.disabled = true;
+    sendBtn.classList.add("opacity-50", "cursor-not-allowed");
+    sendBtn.addEventListener("click", () => sendMessage(chatInput));
+    sendBtn.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        sendMessage(chatInput);
+    });
+    document
+        .getElementById("showDeleteChatModal")
+        .addEventListener("click", () => {
+            showDeleteChatModal(window.channel, sessionStorage.getItem("username"));
+        });
+    document.getElementById("verify-button")?.addEventListener("click", showFingerprintModal);
+    checkAndConnect(null, (channel, username) => {
+        sendAndReceiveMessages(chatInput, username, channel, messagesContainer).then((fingerprint) => {
+            sendBtn.disabled = false;
+            sendBtn.classList.remove("opacity-50", "cursor-not-allowed");
+            setFingerprint(fingerprint);
+        });
+    });
+}
 // ---
 const liveSocket = initLiveSocket();
 initProgressBar();
 registerGlobals(liveSocket);
+bindStaticButtons();
+initChatPage();
 easterEgg();

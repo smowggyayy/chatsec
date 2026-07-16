@@ -38,12 +38,19 @@ async function deriveSecretKey(privateKey, publicKey) {
   }
 }
 // --- encryption & decryption ---
-async function encryptMessage(secretKey, message) {
+// associatedUsername is authenticated (bound into the GCM tag) but not
+// encrypted - it stops a tampering relay from relabeling whose message this
+// is without invalidating decryption, without needing to hide who sent it.
+async function encryptMessage(secretKey, message, associatedUsername) {
   try {
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const encoded = new TextEncoder().encode(message);
     const encrypted = await crypto.subtle.encrypt(
-      { name: "AES-GCM", iv },
+      {
+        name: "AES-GCM",
+        iv,
+        additionalData: new TextEncoder().encode(associatedUsername),
+      },
       secretKey,
       encoded,
     );
@@ -53,12 +60,16 @@ async function encryptMessage(secretKey, message) {
     throw err;
   }
 }
-async function decryptMessage(secretKey, encryptedMessage, ivBase64) {
+async function decryptMessage(secretKey, encryptedMessage, ivBase64, associatedUsername) {
   try {
     const iv = decodeBase64(ivBase64);
     const decoded = decodeBase64(encryptedMessage);
     const decrypted = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
+      {
+        name: "AES-GCM",
+        iv,
+        additionalData: new TextEncoder().encode(associatedUsername),
+      },
       secretKey,
       decoded,
     );
@@ -67,6 +78,19 @@ async function decryptMessage(secretKey, encryptedMessage, ivBase64) {
     showToast("Failed to decrypt message.", "danger");
     throw err;
   }
+}
+// --- connection fingerprint ---
+// A short, human-comparable code derived from both sides' public keys, so
+// two people can confirm (out of band - voice call, in person, etc.) that
+// they each derived a shared secret with EACH OTHER and not with a relay
+// sitting in the middle of the handshake. Sorting before hashing makes the
+// result identical regardless of which side computes it first.
+async function computeFingerprint(publicKeyA, publicKeyB) {
+  const combined = [publicKeyA, publicKeyB].sort().join("");
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(combined));
+  const bytes = new Uint8Array(digest).slice(0, 16);
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return hex.match(/.{1,4}/g).join("-");
 }
 // --- key import & export ---
 async function exportPublicKey(key) {
@@ -90,4 +114,5 @@ export {
   decryptMessage,
   exportPublicKey,
   importPublicKey,
+  computeFingerprint,
 };

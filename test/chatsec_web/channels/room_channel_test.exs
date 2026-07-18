@@ -60,6 +60,18 @@ defmodule ChatsecWeb.RoomChannelTest do
     refute_push "new_msg", %{}, 100
   end
 
+  test "typing is delivered to the other peer but not echoed back to the sender", %{
+    room_id: room_id
+  } do
+    {:ok, _, alice} = join_room(socket_fixture(), room_id, "Alice")
+    {:ok, _, _bob} = join_room(socket_fixture(), room_id, "Bob")
+
+    push(alice, "typing", %{})
+
+    assert_push "typing", %{}, 500
+    refute_push "typing", %{}, 100
+  end
+
   test "an oversized new_msg is dropped instead of broadcast", %{room_id: room_id} do
     {:ok, _, socket} = join_room(socket_fixture(), room_id, "Alice")
 

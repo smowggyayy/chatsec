@@ -8,9 +8,9 @@ defmodule ChatsecWeb.RoomChannel do
   # never trust the client for the actual guarantee.
   @username_regex ~r/^[a-zA-Z0-9 ]{1,32}$/
   @max_message_bytes 8_000
-  # Bounds how fast a single connection can push publickey/new_msg events -
-  # generous for real typing, but stops one peer from flooding the other's
-  # browser or forcing repeated expensive ECDH derivations.
+  # Bounds how fast a single connection can push publickey/new_msg/typing
+  # events - generous for real typing, but stops one peer from flooding the
+  # other's browser or forcing repeated expensive ECDH derivations.
   @rate_limit_window_ms 5_000
   @rate_limit_max_events 20
 
@@ -58,6 +58,20 @@ defmodule ChatsecWeb.RoomChannel do
           "iv" => iv
         })
 
+        {:noreply, socket}
+
+      {:error, socket} ->
+        {:noreply, socket}
+    end
+  end
+
+  # No payload needed - a room only ever has the two peers, so "typing" is
+  # unambiguous about who. Client-side throttles how often this is sent;
+  # this shares the same rate limit as everything else as a backstop.
+  def handle_in("typing", _params, socket) do
+    case check_rate_limit(socket) do
+      {:ok, socket} ->
+        broadcast_from!(socket, "typing", %{})
         {:noreply, socket}
 
       {:error, socket} ->

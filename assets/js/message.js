@@ -4,6 +4,11 @@ import { showToast } from "./toast";
 const USERNAME_KEY = "username";
 const SELF_COLOR = "rgb(138, 255, 156)";
 const OTHER_COLOR = "rgb(255, 128, 197)";
+// How often we'll push a "typing" event while the peer is actively typing,
+// and how long their indicator stays up after the last one we received.
+const TYPING_THROTTLE_MS = 2_000;
+const TYPING_HIDE_MS = 3_000;
+const DEFAULT_TITLE = document.title;
 // --- module state ---
 let secretKey;
 let currentChannel;
@@ -11,6 +16,9 @@ let currentUsername;
 let currentMessagesContainer;
 let currentFingerprint;
 let initialized = false;
+let lastTypingSentAt = 0;
+let typingHideTimeout;
+let unseenCount = 0;
 // --- dom helpers ---
 function buildMessageEl(messageUsername, isSelf) {
 	const usernameEl = document.createElement("span");
@@ -35,6 +43,19 @@ function renderMessage(messageUsername, text, isSelf) {
 	messageEl.innerText = text;
 	currentMessagesContainer.appendChild(container);
 	container.scrollIntoView({ behavior: "smooth", block: "end" });
+}
+function setTypingIndicatorVisible(visible) {
+	document.getElementById("typing-indicator")?.classList.toggle("hidden", !visible);
+}
+function markUnseenMessage() {
+	if (document.hasFocus()) return;
+	unseenCount += 1;
+	document.title = `(${unseenCount}) ${DEFAULT_TITLE}`;
+}
+function clearUnseenMessages() {
+	if (unseenCount === 0) return;
+	unseenCount = 0;
+	document.title = DEFAULT_TITLE;
 }
 // --- event handlers ---
 async function sendMessage(chatInput) {
@@ -65,7 +86,21 @@ async function handleKeyDown(event) {
 	event.preventDefault();
 	await sendMessage(event.currentTarget);
 }
+function handleTypingInput() {
+	if (!secretKey || !currentChannel) return;
+	const now = Date.now();
+	if (now - lastTypingSentAt < TYPING_THROTTLE_MS) return;
+	lastTypingSentAt = now;
+	currentChannel.push("typing", {});
+}
+function handleTypingReceived() {
+	setTypingIndicatorVisible(true);
+	clearTimeout(typingHideTimeout);
+	typingHideTimeout = setTimeout(() => setTypingIndicatorVisible(false), TYPING_HIDE_MS);
+}
 async function handleNewMsg(payload) {
+	clearTimeout(typingHideTimeout);
+	setTypingIndicatorVisible(false);
 	if (!payload.body) {
 		console.warn("Received message with no body", payload);
 		return;
@@ -73,6 +108,7 @@ async function handleNewMsg(payload) {
 	try {
 		const decrypted = await decryptMessage(secretKey, payload.body, payload.iv, payload.username);
 		renderMessage(payload.username, decrypted, false);
+		markUnseenMessage();
 	} catch (_) {
 		showToast("Failed to decrypt message.", "danger");
 	}
@@ -97,8 +133,11 @@ async function sendAndReceiveMessages(chatInput, username, channel, messagesCont
 	currentMessagesContainer = messagesContainer;
 	if (!initialized) {
 		chatInput.addEventListener("keydown", handleKeyDown);
+		chatInput.addEventListener("input", handleTypingInput);
 		channel.on("new_msg", handleNewMsg);
+		channel.on("typing", handleTypingReceived);
 		channel.on("room_deleted", handleRoomDeleted);
+		window.addEventListener("focus", clearUnseenMessages);
 		initialized = true;
 	}
 	return currentFingerprint;

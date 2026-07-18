@@ -1,3 +1,5 @@
+import re
+
 from playwright.sync_api import expect
 
 from conftest import create_room, join_room, send_message, wait_for_send_ready
@@ -94,6 +96,61 @@ def test_enter_sends_shift_enter_inserts_newline(make_page, base_url):
     expect(chat_input).to_have_value("")
     expect(bob.locator("#messages")).to_contain_text("line one")
     expect(bob.locator("#messages")).to_contain_text("line two")
+
+
+def test_typing_indicator_shows_then_clears_after_inactivity(make_page, base_url):
+    alice = make_page()
+    room_url = create_room(alice, base_url, "Alice")
+    bob = make_page()
+    join_room(bob, room_url, "Bob")
+    wait_for_send_ready(alice)
+    wait_for_send_ready(bob)
+
+    expect(bob.locator("#typing-indicator")).to_be_hidden()
+    alice.locator("#chat-input").press_sequentially("h")
+    expect(bob.locator("#typing-indicator")).to_be_visible(timeout=2000)
+
+    # No explicit "stop typing" event - the indicator times itself out after
+    # a few seconds of no further "typing" pushes (TYPING_HIDE_MS in message.js).
+    expect(bob.locator("#typing-indicator")).to_be_hidden(timeout=5000)
+
+
+def test_typing_indicator_hides_immediately_once_message_arrives(make_page, base_url):
+    alice = make_page()
+    room_url = create_room(alice, base_url, "Alice")
+    bob = make_page()
+    join_room(bob, room_url, "Bob")
+    wait_for_send_ready(alice)
+    wait_for_send_ready(bob)
+
+    chat_input = alice.locator("#chat-input")
+    chat_input.press_sequentially("Hi Bob")
+    expect(bob.locator("#typing-indicator")).to_be_visible(timeout=2000)
+
+    chat_input.press("Enter")
+    expect(bob.locator("#messages")).to_contain_text("Hi Bob")
+    expect(bob.locator("#typing-indicator")).to_be_hidden()
+
+
+def test_document_title_flags_unseen_message_when_tab_unfocused(make_page, base_url):
+    alice = make_page()
+    room_url = create_room(alice, base_url, "Alice")
+    bob = make_page()
+    join_room(bob, room_url, "Bob")
+    wait_for_send_ready(alice)
+    wait_for_send_ready(bob)
+
+    default_title = bob.title()
+
+    # Headless multi-context focus isn't something real OS window-manager
+    # focus drives predictably, so force the check the app actually makes.
+    bob.evaluate("() => { document.hasFocus = () => false; }")
+
+    send_message(alice, "Hey Bob")
+    expect(bob).to_have_title(re.compile(r"^\(1\) "), timeout=5000)
+
+    bob.evaluate("() => window.dispatchEvent(new Event('focus'))")
+    expect(bob).to_have_title(default_title)
 
 
 def test_invite_modal_shows_room_url_and_copy_shows_toast(make_page, base_url):

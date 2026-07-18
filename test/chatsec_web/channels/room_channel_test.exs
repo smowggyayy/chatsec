@@ -72,6 +72,33 @@ defmodule ChatsecWeb.RoomChannelTest do
     refute_push "typing", %{}, 100
   end
 
+  test "set_timer is broadcast to both peers, including the sender", %{room_id: room_id} do
+    {:ok, _, alice} = join_room(socket_fixture(), room_id, "Alice")
+
+    push(alice, "set_timer", %{"minutes" => 10})
+
+    assert_broadcast "timer_set", %{"ms" => 600_000}
+  end
+
+  test "a joiner is told about a timer already set before they arrived", %{room_id: room_id} do
+    {:ok, _, alice} = join_room(socket_fixture(), room_id, "Alice")
+    push(alice, "set_timer", %{"minutes" => 10})
+    assert_broadcast "timer_set", %{"ms" => 600_000}
+
+    {:ok, _, _bob} = join_room(socket_fixture(), room_id, "Bob")
+
+    assert_push "timer_set", %{"ms" => ms}, 500
+    assert ms > 0 and ms <= 600_000
+  end
+
+  test "an invalid timer duration is ignored", %{room_id: room_id} do
+    {:ok, _, socket} = join_room(socket_fixture(), room_id, "Alice")
+
+    push(socket, "set_timer", %{"minutes" => 5})
+
+    refute_broadcast "timer_set", %{}
+  end
+
   test "an oversized new_msg is dropped instead of broadcast", %{room_id: room_id} do
     {:ok, _, socket} = join_room(socket_fixture(), room_id, "Alice")
 

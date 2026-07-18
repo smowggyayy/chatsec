@@ -13,6 +13,9 @@ defmodule ChatsecWeb.RoomChannel do
   # other's browser or forcing repeated expensive ECDH derivations.
   @rate_limit_window_ms 5_000
   @rate_limit_max_events 20
+  # 0 means "off". Fixed options rather than an arbitrary client-supplied
+  # duration - never trust the client for a value that schedules server work.
+  @allowed_timer_minutes [0, 10, 30, 60]
 
   def join("room:" <> room_id, %{"username" => username}, socket)
       when is_binary(username) do
@@ -79,6 +82,30 @@ defmodule ChatsecWeb.RoomChannel do
     end
   end
 
+  # Either peer can set/change/clear this - a 2-person room doesn't have a
+  # meaningful "owner" once both are in it. Broadcasts (not broadcast_from!)
+  # since this is UI state both sides should stay in sync on, not something
+  # the sender already renders locally like new_msg does.
+  def handle_in("set_timer", %{"minutes" => minutes}, socket)
+      when minutes in @allowed_timer_minutes do
+    case check_rate_limit(socket) do
+      {:ok, socket} ->
+        ms = minutes * 60_000
+
+        if minutes == 0 do
+          ChannelState.clear_expiry(socket.assigns.room_id)
+        else
+          ChannelState.set_expiry(socket.assigns.room_id, ms)
+        end
+
+        broadcast!(socket, "timer_set", %{"ms" => ms})
+        {:noreply, socket}
+
+      {:error, socket} ->
+        {:noreply, socket}
+    end
+  end
+
   def handle_in("adios", _, socket) do
     ChannelState.delete_room(socket.assigns.room_id)
     broadcast!(socket, "room_deleted", %{})
@@ -112,7 +139,18 @@ defmodule ChatsecWeb.RoomChannel do
   def handle_info({:after_join, username}, socket) do
     track_user_presence(socket, username)
     broadcast!(socket, "after_join", %{"username" => username})
+    push_current_timer(socket)
     {:noreply, socket}
+  end
+
+  # If a timer was already set before this peer joined (or they're
+  # rejoining after a refresh), tell them where the countdown currently
+  # stands rather than leaving their UI with no indication it's running.
+  defp push_current_timer(socket) do
+    case ChannelState.get_expiry(socket.assigns.room_id) do
+      nil -> :ok
+      remaining_ms -> push(socket, "timer_set", %{"ms" => remaining_ms})
+    end
   end
 
   def terminate(_, socket) do

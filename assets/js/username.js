@@ -1,12 +1,6 @@
 import { showToast } from "./toast";
 import { openModal, modalShell, BTN_PRIMARY, BTN_SECONDARY, INPUT_CLASS } from "./modal";
 // --- constants ---
-const ADJECTIVES = [
-	"aggressive", "angry", "bored", "busy", "cautious",
-	"disturbed", "dead", "cruel", "creepy", "elite",
-	"fair", "envious", "good", "powerful", "rich",
-	"strange", "sweet", "wicked", "pleasant", "talented",
-];
 const NAMES = [
 	"aamon", "paimon", "baal", "baphomet", "lucifer",
 	"mammon", "asmodeus", "leviathan", "beelzebub", "azazel",
@@ -19,9 +13,6 @@ const USER_ICON = `
   </svg>
 `;
 // --- helpers ---
-function capitalize(word) {
-	return word[0].toUpperCase() + word.slice(1);
-}
 function randomItem(arr) {
 	return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -33,7 +24,7 @@ function sanitizeInput(input) {
 		.trim();
 }
 function createRandomUsername() {
-	return capitalize(randomItem(ADJECTIVES)) + capitalize(randomItem(NAMES));
+	return randomItem(NAMES);
 }
 // --- modal ---
 function usernameForm() {

@@ -5,8 +5,8 @@
   </div>
 
   <%!-- Header --%>
-  <header class="relative flex shrink-0 items-center justify-between border-b border-gray-700 bg-gray-800 px-4 py-3">
-    <div class="flex items-center gap-2.5">
+  <header class="relative flex shrink-0 items-center justify-between gap-2 border-b border-gray-700 bg-gray-800 px-4 py-3">
+    <div class="flex min-w-0 items-center gap-2.5">
       <svg viewBox="0 0 200 200" class="h-7 w-7 shrink-0" aria-hidden="true">
         <defs>
           <linearGradient id="logoGradChat" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -22,37 +22,41 @@
         <circle cx="100" cy="72" r="17" fill="#f5f3ff" />
         <path d="M91 84L109 84L116 114Q100 124 84 114Z" fill="#f5f3ff" />
       </svg>
-      <div>
+      <div class="min-w-0">
         <h1 class="text-sm font-bold leading-tight text-white">ChatSec</h1>
         <div id="users">
           <ul id="usernames" class="flex flex-wrap gap-x-2 text-xs text-gray-400"></ul>
         </div>
       </div>
     </div>
-    <div class="flex gap-2">
+    <%!-- overflow-x-auto is a safety net, not the primary fit: on a phone-width
+         screen these four buttons plus the logo/username block don't all fit
+         at once, and a clipped-off Delete button would be worse than a
+         scrollable one. --%>
+    <div class="flex min-w-0 gap-1.5 overflow-x-auto">
       <button
         id="timer-button"
-        class="rounded-lg bg-gray-700 px-3 py-1.5 text-sm font-bold text-white transition duration-150 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 active:bg-gray-800"
+        class="shrink-0 rounded-lg bg-gray-700 px-2.5 py-1.5 text-sm font-bold text-white transition duration-150 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 active:bg-gray-800"
         title="Automatically delete this room after a set time"
       >
         Timer
       </button>
       <button
         id="verify-button"
-        class="hidden rounded-lg bg-gray-700 px-3 py-1.5 text-sm font-bold text-white transition duration-150 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 active:bg-gray-800"
+        class="hidden shrink-0 rounded-lg bg-gray-700 px-2.5 py-1.5 text-sm font-bold text-white transition duration-150 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 active:bg-gray-800"
         title="Verify this connection hasn't been intercepted"
       >
         Verify
       </button>
       <button
         id="invite-button"
-        class="rounded-lg bg-violet-500 px-3 py-1.5 text-sm font-bold text-white transition duration-150 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 active:bg-violet-800"
+        class="shrink-0 rounded-lg bg-violet-500 px-2.5 py-1.5 text-sm font-bold text-white transition duration-150 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 active:bg-violet-800"
       >
         Invite
       </button>
       <button
         id="showDeleteChatModal"
-        class="rounded-lg bg-pink-600 px-3 py-1.5 text-sm font-bold text-white transition duration-150 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 active:bg-pink-800"
+        class="shrink-0 rounded-lg bg-pink-600 px-2.5 py-1.5 text-sm font-bold text-white transition duration-150 hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 active:bg-pink-800"
       >
         Delete
       </button>

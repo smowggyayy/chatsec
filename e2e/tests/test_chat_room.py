@@ -161,13 +161,13 @@ def test_timer_modal_sets_countdown_visible_to_both_peers(make_page, base_url):
     wait_for_send_ready(alice)
     wait_for_send_ready(bob)
 
-    expect(alice.locator("#timer-button")).to_have_text("Timer")
+    expect(alice.locator("#timer-label")).to_have_text("Timer")
     alice.click("#timer-button")
     expect(alice.get_by_text("Self-destruct timer")).to_be_visible()
     alice.click("button[data-minutes='10']")
 
-    expect(alice.locator("#timer-button")).to_have_text(re.compile(r"^(9|10):\d\d$"))
-    expect(bob.locator("#timer-button")).to_have_text(re.compile(r"^(9|10):\d\d$"))
+    expect(alice.locator("#timer-label")).to_have_text(re.compile(r"^(9|10):\d\d$"))
+    expect(bob.locator("#timer-label")).to_have_text(re.compile(r"^(9|10):\d\d$"))
 
 
 def test_timer_state_is_synced_to_a_peer_joining_afterwards(make_page, base_url):
@@ -179,11 +179,47 @@ def test_timer_state_is_synced_to_a_peer_joining_afterwards(make_page, base_url)
 
     alice.click("#timer-button")
     alice.click("button[data-minutes='10']")
-    expect(alice.locator("#timer-button")).to_have_text(re.compile(r"^(9|10):\d\d$"))
+    expect(alice.locator("#timer-label")).to_have_text(re.compile(r"^(9|10):\d\d$"))
 
     bob = make_page()
     join_room(bob, room_url, "Bob")
-    expect(bob.locator("#timer-button")).to_have_text(re.compile(r"^(9|10):\d\d$"), timeout=15000)
+    expect(bob.locator("#timer-label")).to_have_text(re.compile(r"^(9|10):\d\d$"), timeout=15000)
+
+
+def test_header_buttons_stay_within_the_viewport_on_mobile(make_page, base_url):
+    """Regression test: on a phone-width screen, the header's Timer/Verify/
+    Invite/Delete buttons must never be pushed outside the visible viewport -
+    not by default, not with long usernames (which take more of the header's
+    width and used to squeeze the button row along with it), and not while a
+    self-destruct timer is actively counting down (all three combined to
+    push Delete out of frame before the header/timer.js layout fix)."""
+    alice = make_page()
+    alice.set_viewport_size({"width": 375, "height": 812})
+    room_url = create_room(alice, base_url, "asmodeus")
+    bob = make_page()
+    join_room(bob, room_url, "belphegor")
+    wait_for_send_ready(alice)
+    wait_for_send_ready(bob)
+
+    viewport_width = 375
+    button_ids = ["#timer-button", "#verify-button", "#invite-button", "#showDeleteChatModal"]
+
+    def assert_buttons_in_bounds():
+        for button_id in button_ids:
+            box = alice.locator(button_id).bounding_box()
+            assert box is not None, f"{button_id} has no bounding box"
+            assert box["x"] >= 0, f"{button_id} starts off the left edge"
+            assert box["x"] + box["width"] <= viewport_width, (
+                f"{button_id} overflows the {viewport_width}px viewport "
+                f"(right edge at {box['x'] + box['width']})"
+            )
+
+    assert_buttons_in_bounds()
+
+    alice.click("#timer-button")
+    alice.click("button[data-minutes='10']")
+    expect(alice.locator("#timer-label")).to_have_text(re.compile(r"^(9|10):\d\d$"))
+    assert_buttons_in_bounds()
 
 
 def test_invite_modal_shows_room_url_and_copy_shows_toast(make_page, base_url):

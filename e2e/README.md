@@ -1,8 +1,9 @@
 # ChatSec end-to-end tests
 
 Browser-driven tests (Playwright + pytest) covering the full app: home page,
-username flow, chat room messaging/presence/invite/delete, room capacity,
-error pages, and the security response headers.
+username flow, chat room messaging/presence/invite/delete/verify/typing
+indicator/self-destruct timer, room capacity, error pages, and the security
+response headers.
 
 ## Setup
 
@@ -50,3 +51,14 @@ poetry run pytest --headed --slowmo 250  # watch it run
   configured (see `config/prod.exs`), which is intentionally off in dev to
   avoid forcing HTTPS redirects during local development. It is not exercised
   by this suite; see the root `CLAUDE.md` for how it's verified instead.
+- Tests for the unfocused-tab title notification force
+  `document.hasFocus = () => false` via `page.evaluate` rather than relying
+  on real OS window focus — headless multi-context focus isn't something a
+  browser's own window manager drives predictably across independent
+  Playwright contexts, so the test overrides the exact check the app
+  actually makes instead.
+- Nothing here drives a mobile-width viewport. The chat header's
+  responsive icon-only layout below the `sm` breakpoint
+  (`chat.html.heex`/`timer.js` — see `CLAUDE.md`'s frontend-conventions
+  section) was verified manually in a resized browser, not by an
+  automated test in this suite — worth adding if that layout changes again.

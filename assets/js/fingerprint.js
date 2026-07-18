@@ -10,7 +10,9 @@ const FINGERPRINT_ICON = `
 
 function setFingerprint(fingerprint) {
 	currentFingerprint = fingerprint;
-	document.getElementById("verify-button")?.classList.remove("hidden");
+	const button = document.getElementById("verify-button");
+	button?.classList.remove("hidden");
+	button?.classList.add("flex");
 }
 
 function showFingerprintModal() {

@@ -24,29 +24,35 @@ function formatRemaining(ms) {
 	const seconds = totalSeconds % 60;
 	return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
-function updateButtonLabel() {
-	const button = document.getElementById("timer-button");
-	if (!button) return;
+function updateDisplays() {
+	const label = document.getElementById("timer-label");
+	const mobileCountdown = document.getElementById("timer-mobile-countdown");
 	if (!expiresAt) {
-		button.textContent = "Timer";
+		if (label) label.textContent = "Timer";
+		mobileCountdown?.classList.add("hidden");
 		return;
 	}
 	const remaining = expiresAt - Date.now();
 	if (remaining <= 0) {
 		clearInterval(countdownInterval);
 	}
-	button.textContent = formatRemaining(remaining);
+	const text = formatRemaining(remaining);
+	if (label) label.textContent = text;
+	if (mobileCountdown) {
+		mobileCountdown.textContent = `Auto-deletes in ${text}`;
+		mobileCountdown.classList.remove("hidden");
+	}
 }
 function startCountdown(ms) {
 	clearInterval(countdownInterval);
 	if (!ms) {
 		expiresAt = null;
-		updateButtonLabel();
+		updateDisplays();
 		return;
 	}
 	expiresAt = Date.now() + ms;
-	updateButtonLabel();
-	countdownInterval = setInterval(updateButtonLabel, 1000);
+	updateDisplays();
+	countdownInterval = setInterval(updateDisplays, 1000);
 }
 function handleTimerSet(payload) {
 	startCountdown(payload.ms);

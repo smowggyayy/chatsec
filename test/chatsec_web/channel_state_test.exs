@@ -50,6 +50,56 @@ defmodule ChatsecWeb.ChannelStateTest do
     assert [occupied_room] == ChannelState.get_rooms(pid)
   end
 
+  test "a room's timer deletes it after the given duration", %{pid: pid} do
+    room_id = UUID.uuid4()
+    assert :ok == ChannelState.create_room(pid, room_id)
+    assert :ok == ChannelState.set_expiry(pid, room_id, 10)
+
+    Process.sleep(30)
+    assert [] == ChannelState.get_rooms(pid)
+  end
+
+  test "clear_expiry cancels a pending timer", %{pid: pid} do
+    room_id = UUID.uuid4()
+    assert :ok == ChannelState.create_room(pid, room_id)
+    assert :ok == ChannelState.set_expiry(pid, room_id, 10)
+    assert :ok == ChannelState.clear_expiry(pid, room_id)
+
+    Process.sleep(30)
+    assert [room_id] == ChannelState.get_rooms(pid)
+  end
+
+  test "setting a new expiry replaces the previous one instead of stacking", %{pid: pid} do
+    room_id = UUID.uuid4()
+    assert :ok == ChannelState.create_room(pid, room_id)
+    assert :ok == ChannelState.set_expiry(pid, room_id, 10)
+    assert :ok == ChannelState.set_expiry(pid, room_id, 60_000)
+
+    # If the first (10ms) timer had fired anyway, the room would be gone.
+    Process.sleep(30)
+    assert [room_id] == ChannelState.get_rooms(pid)
+  end
+
+  test "get_expiry reports nil with no timer, remaining ms with one set", %{pid: pid} do
+    room_id = UUID.uuid4()
+    assert :ok == ChannelState.create_room(pid, room_id)
+    assert nil == ChannelState.get_expiry(pid, room_id)
+
+    assert :ok == ChannelState.set_expiry(pid, room_id, 60_000)
+    remaining = ChannelState.get_expiry(pid, room_id)
+    assert is_integer(remaining)
+    assert remaining > 0 and remaining <= 60_000
+  end
+
+  test "an expiry firing broadcasts room_deleted on the room's topic", %{pid: pid} do
+    room_id = UUID.uuid4()
+    Phoenix.PubSub.subscribe(Chatsec.PubSub, "room:" <> room_id)
+    assert :ok == ChannelState.create_room(pid, room_id)
+    assert :ok == ChannelState.set_expiry(pid, room_id, 10)
+
+    assert_receive %Phoenix.Socket.Broadcast{event: "room_deleted"}, 200
+  end
+
   test "room data survives an abnormal crash-and-restart, but not a normal stop" do
     {:ok, pid} = ChannelState.start_link(name: :crash_test)
     room_id = UUID.uuid4()

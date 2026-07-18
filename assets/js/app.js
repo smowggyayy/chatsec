@@ -9,6 +9,7 @@ import { handshake } from "./handshake.js";
 import { sendAndReceiveMessages, sendMessage } from "./message.js";
 import { donateModal } from "./donate.js";
 import { setFingerprint, showFingerprintModal } from "./fingerprint.js";
+import { initTimer } from "./timer.js";
 function initLiveSocket() {
     const csrfToken = document
         .querySelector("meta[name='csrf-token']")
@@ -81,6 +82,7 @@ function initChatPage() {
         });
     document.getElementById("verify-button")?.addEventListener("click", showFingerprintModal);
     checkAndConnect(null, (channel, username) => {
+        initTimer(channel);
         sendAndReceiveMessages(chatInput, username, channel, messagesContainer).then((fingerprint) => {
             sendBtn.disabled = false;
             sendBtn.classList.remove("opacity-50", "cursor-not-allowed");

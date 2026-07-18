@@ -153,6 +153,39 @@ def test_document_title_flags_unseen_message_when_tab_unfocused(make_page, base_
     expect(bob).to_have_title(default_title)
 
 
+def test_timer_modal_sets_countdown_visible_to_both_peers(make_page, base_url):
+    alice = make_page()
+    room_url = create_room(alice, base_url, "Alice")
+    bob = make_page()
+    join_room(bob, room_url, "Bob")
+    wait_for_send_ready(alice)
+    wait_for_send_ready(bob)
+
+    expect(alice.locator("#timer-button")).to_have_text("Timer")
+    alice.click("#timer-button")
+    expect(alice.get_by_text("Self-destruct timer")).to_be_visible()
+    alice.click("button[data-minutes='10']")
+
+    expect(alice.locator("#timer-button")).to_have_text(re.compile(r"^(9|10):\d\d$"))
+    expect(bob.locator("#timer-button")).to_have_text(re.compile(r"^(9|10):\d\d$"))
+
+
+def test_timer_state_is_synced_to_a_peer_joining_afterwards(make_page, base_url):
+    # The timer doesn't depend on the E2EE handshake completing, so Alice
+    # can set it while still alone in the room, well before Bob joins.
+    alice = make_page()
+    room_url = create_room(alice, base_url, "Alice")
+    expect(alice.locator("#timer-button")).to_be_visible()
+
+    alice.click("#timer-button")
+    alice.click("button[data-minutes='10']")
+    expect(alice.locator("#timer-button")).to_have_text(re.compile(r"^(9|10):\d\d$"))
+
+    bob = make_page()
+    join_room(bob, room_url, "Bob")
+    expect(bob.locator("#timer-button")).to_have_text(re.compile(r"^(9|10):\d\d$"), timeout=15000)
+
+
 def test_invite_modal_shows_room_url_and_copy_shows_toast(make_page, base_url):
     alice = make_page()
     room_url = create_room(alice, base_url, "Alice")

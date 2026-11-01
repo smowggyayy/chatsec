@@ -1,9 +1,0 @@
-__pycache__/
-*.pyc
-.pytest_cache/
-pytestdebug.log
-.venv/
-
-# Local test-runner config isn't secret (just IP/PORT defaults) and is
-# meant to be committed, unlike the root .gitignore's blanket .env rule.
-!tests/.env

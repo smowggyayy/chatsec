@@ -46,6 +46,10 @@ npm-debug.log
 # TODO list
 TODO.md
 
+# Local-only Playwright/pytest end-to-end suite (kept out of the repo so its
+# poetry.lock doesn't need maintaining here - see CLAUDE.md for how to run it)
+e2e/
+
 # Claude config and tooling
 .claude
 CLAUDE.md
